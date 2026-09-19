@@ -77,11 +77,20 @@ Admin session or that project's API key.
 
 | Method | Path | Body | Notes |
 |---|---|---|---|
-| `GET` | `/api/v1/projects` | — | `{ projects: [{ id, name, apiKey, createdAt, logCount }] }` |
+| `GET` | `/api/v1/projects` | — | `{ projects: [{ id, name, apiKey, retentionDays, createdAt, logCount }] }` |
 | `POST` | `/api/v1/projects` | `{ "name": "my-app" }` | `201` `{ project }` with a fresh `apiKey` |
 | `GET` | `/api/v1/projects/:id` | — | |
-| `PATCH` | `/api/v1/projects/:id` | `{ "name"?: "…", "rotateKey"?: true }` | rotating invalidates the old key immediately |
+| `PATCH` | `/api/v1/projects/:id` | `{ "name"?: "…", "rotateKey"?: true, "retentionDays"?: 1–3650 \| null }` | rotating invalidates the old key immediately; `retentionDays: null` falls back to the server default |
 | `DELETE` | `/api/v1/projects/:id` | — | deletes the project **and all its logs** |
+
+## Retention (admin session only)
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| `POST` | `/api/v1/retention/run` | `{ "projectId"?: "…" }` | Run the cleanup now; returns `{ ranAt, projects: [{ id, name, retentionDays, deleted }], totalDeleted }` |
+| `GET` | `/api/v1/retention/run` | — | `{ last }` — result of the most recent run |
+
+The cleanup also runs automatically every `LOGSETU_RETENTION_INTERVAL_MINUTES` (default 60).
 
 ## Auth
 

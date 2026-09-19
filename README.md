@@ -99,6 +99,7 @@ That's it — logs show up in the dashboard in real time.
 - ✅ **Multi-project** — separate API keys, rotate keys, ready-to-paste integration snippets per project
 - ✅ **`logsetu-js`** — ~2.5 KB gzipped, batching + retry, `captureException`, `<LogSetuErrorBoundary>`, Next.js `instrumentation.ts` hooks, browser + Node + Edge, fully typed
 - ✅ **`logsetu-django`** — a `logging.Handler` (zero deps, background thread), middleware that captures unhandled exceptions with redacted headers, tenant tagging for multi-tenant SaaS
+- ✅ **Retention policies** — keep logs for N days per project (or a server-wide default); old logs are purged automatically every hour
 - ✅ **SQLite or Postgres** — zero-config SQLite on a Docker volume, or set `DATABASE_URL=postgresql://…`
 - ✅ **Single admin password** — no user-management ceremony for v1
 
@@ -154,6 +155,7 @@ docker compose -f docker-compose.prod.yml up -d
 | `LOGSETU_PORT` | `8686` | Host port |
 | `DATABASE_URL` | `file:/data/logsetu.db` | `file:…` for SQLite or `postgresql://…` |
 | `LOGSETU_RATE_LIMIT_PER_MIN` | `1000` | Max logs per project per minute |
+| `LOGSETU_DEFAULT_RETENTION_DAYS` | unset (keep forever) | Default retention for projects without their own setting |
 | `LOGSETU_SECURE_COOKIES` | `0` | Set `1` behind HTTPS |
 
 Schema migrations run automatically on start. See [docs/self-hosting.md](docs/self-hosting.md) for reverse proxies,
@@ -175,7 +177,7 @@ Full reference (ingest, query, projects, stats): [docs/http-api.md](docs/http-ap
 ## Roadmap
 
 - [ ] **Alerting** — Slack / email / webhook when `error` or `fatal` logs exceed a threshold
-- [ ] **Log retention policies** — auto-delete logs older than N days per project
+- [x] **Log retention policies** — auto-delete logs older than N days per project
 - [ ] **SSE real-time streaming** — push instead of polling in the dashboard
 - [ ] **Error grouping** — collapse identical stack traces into issues with counts
 - [ ] **OpenTelemetry export** — forward logs to any OTLP collector

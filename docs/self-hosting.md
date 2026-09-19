@@ -33,6 +33,8 @@ in `.env` — the server picks the driver from the URL scheme.
 | `DATABASE_URL` | `file:/data/logsetu.db` | `file:<path>` (SQLite) or `postgresql://…` |
 | `LOGSETU_PORT` | `8686` | Host port mapping (compose only) |
 | `LOGSETU_RATE_LIMIT_PER_MIN` | `1000` | Per-project ingestion limit. Exceeding it returns `429` with `Retry-After`; SDKs back off automatically. |
+| `LOGSETU_DEFAULT_RETENTION_DAYS` | unset | Delete logs older than N days for projects that have no retention of their own. Per-project values are set in the dashboard (Projects → Log retention). Unset = keep forever. |
+| `LOGSETU_RETENTION_INTERVAL_MINUTES` | `60` | How often the cleanup job runs. |
 | `LOGSETU_SECURE_COOKIES` | `0` | Set to `1` when served over HTTPS so the session cookie gets the `Secure` flag. |
 
 ## Reverse proxy (HTTPS)

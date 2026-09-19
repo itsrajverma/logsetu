@@ -11,6 +11,7 @@ services:
       LOGSETU_ADMIN_PASSWORD: ${LOGSETU_ADMIN_PASSWORD:?set LOGSETU_ADMIN_PASSWORD in .env}
       LOGSETU_SECRET: ${LOGSETU_SECRET:?set LOGSETU_SECRET in .env (any long random string)}
       DATABASE_URL: postgresql://${POSTGRES_USER:-logsetu}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-logsetu}
+      LOGSETU_DEFAULT_RETENTION_DAYS: ${LOGSETU_DEFAULT_RETENTION_DAYS:-}
       LOGSETU_RATE_LIMIT_PER_MIN: ${LOGSETU_RATE_LIMIT_PER_MIN:-5000}
       # Set to 1 when serving over HTTPS (behind a reverse proxy) so the session cookie is Secure.
       LOGSETU_SECURE_COOKIES: ${LOGSETU_SECURE_COOKIES:-0}

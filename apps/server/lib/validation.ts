@@ -90,6 +90,13 @@ export const createProjectSchema = z.object({
   name: z.string().trim().min(1).max(100),
 });
 
+export const updateProjectSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  rotateKey: z.boolean().optional(),
+  // null = fall back to the server default; omitted = unchanged
+  retentionDays: z.number().int().min(1).max(3650).nullable().optional(),
+});
+
 export const loginSchema = z.object({
   password: z.string().min(1),
 });

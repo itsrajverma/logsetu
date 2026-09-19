@@ -7,12 +7,13 @@ export const dynamic = "force-dynamic";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const rows = await db.project.findMany({
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, apiKey: true, createdAt: true, _count: { select: { logs: true } } },
+    select: { id: true, name: true, apiKey: true, retentionDays: true, createdAt: true, _count: { select: { logs: true } } },
   });
   const projects: ProjectSummary[] = rows.map((p) => ({
     id: p.id,
     name: p.name,
     apiKey: p.apiKey,
+    retentionDays: p.retentionDays,
     createdAt: p.createdAt.toISOString(),
     logCount: p._count.logs,
   }));

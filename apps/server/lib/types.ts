@@ -4,6 +4,7 @@ export type ProjectSummary = {
   id: string;
   name: string;
   apiKey: string;
+  retentionDays: number | null;
   createdAt: string;
   logCount: number;
 };

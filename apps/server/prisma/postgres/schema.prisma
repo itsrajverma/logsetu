@@ -10,9 +10,10 @@ datasource db {
 model Project {
   id        String     @id @default(cuid())
   name      String
-  apiKey    String     @unique
-  createdAt DateTime   @default(now())
-  logs      LogEntry[]
+  apiKey        String     @unique
+  retentionDays Int?       // null = use LOGSETU_DEFAULT_RETENTION_DAYS (or keep forever)
+  createdAt     DateTime   @default(now())
+  logs          LogEntry[]
 }
 
 model LogEntry {

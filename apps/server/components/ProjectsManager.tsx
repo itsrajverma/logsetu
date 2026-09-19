@@ -9,10 +9,12 @@ export function ProjectsManager({
   projects,
   initialSelected,
   justCreated,
+  defaultRetentionDays,
 }: {
   projects: ProjectSummary[];
   initialSelected?: string;
   justCreated?: boolean;
+  defaultRetentionDays: number | null;
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(initialSelected ?? projects[0]?.id ?? null);
@@ -156,11 +158,102 @@ export function ProjectsManager({
               </div>
             </div>
 
+            <RetentionCard
+              project={selected}
+              defaultDays={defaultRetentionDays}
+              busy={busy}
+              onSave={(days) => call("PATCH", `/api/v1/projects/${selected.id}`, { retentionDays: days })}
+              onRunNow={() => call("POST", "/api/v1/retention/run", { projectId: selected.id })}
+            />
+
             <Snippets apiKey={selected.apiKey} origin={origin} />
           </section>
         )}
       </div>
     </main>
+  );
+}
+
+function RetentionCard({
+  project,
+  defaultDays,
+  busy,
+  onSave,
+  onRunNow,
+}: {
+  project: ProjectSummary;
+  defaultDays: number | null;
+  busy: boolean;
+  onSave: (days: number | null) => Promise<unknown>;
+  onRunNow: () => Promise<unknown>;
+}) {
+  const [draft, setDraft] = useState(project.retentionDays?.toString() ?? "");
+  const [result, setResult] = useState<string | null>(null);
+  useEffect(() => setDraft(project.retentionDays?.toString() ?? ""), [project.id, project.retentionDays]);
+
+  const effective = project.retentionDays ?? defaultDays;
+  const dirty = draft !== (project.retentionDays?.toString() ?? "");
+  const valid = draft === "" || (/^\d+$/.test(draft) && Number(draft) >= 1 && Number(draft) <= 3650);
+
+  return (
+    <div className="bg-surface border border-border rounded-lg p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold">Log retention</h3>
+        <span className="text-xs text-ink-3">
+          {effective ? `Logs older than ${effective} day${effective === 1 ? "" : "s"} are deleted automatically` : "Logs are kept forever"}
+          {project.retentionDays == null && defaultDays ? " (server default)" : ""}
+        </span>
+      </div>
+      <form
+        className="flex flex-wrap items-center gap-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!valid) return;
+          await onSave(draft === "" ? null : Number(draft));
+          setResult("Saved");
+          setTimeout(() => setResult(null), 1500);
+        }}
+      >
+        <label className="text-xs text-ink-2">Keep logs for</label>
+        <input
+          className="input w-24 mono"
+          inputMode="numeric"
+          placeholder={defaultDays ? String(defaultDays) : "∞"}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value.trim())}
+          aria-label="Retention days"
+        />
+        <span className="text-xs text-ink-2">days</span>
+        <button className="btn btn-primary py-1 text-xs" disabled={busy || !dirty || !valid}>
+          Save
+        </button>
+        {draft !== "" && (
+          <button type="button" className="btn py-1 text-xs" onClick={() => setDraft("")} disabled={busy}>
+            Use default
+          </button>
+        )}
+        <button
+          type="button"
+          className="btn py-1 text-xs ml-auto"
+          disabled={busy || !effective}
+          title={effective ? "Delete logs past the retention window now" : "Set a retention period first"}
+          onClick={async () => {
+            if (!confirm(`Delete all logs older than ${effective} days for "${project.name}" now?`)) return;
+            const r = (await onRunNow()) as { totalDeleted?: number } | null;
+            setResult(r ? `Deleted ${r.totalDeleted ?? 0} logs` : null);
+            setTimeout(() => setResult(null), 3000);
+          }}
+        >
+          Run cleanup now
+        </button>
+        {!valid && <span className="text-xs text-level-error">Enter 1–3650, or leave blank for the default</span>}
+        {result && <span className="text-xs text-ink-2">{result}</span>}
+      </form>
+      <p className="text-xs text-ink-3">
+        Blank = server default (<code className="mono">LOGSETU_DEFAULT_RETENTION_DAYS</code>
+        {defaultDays ? ` = ${defaultDays}` : " unset → keep forever"}). Cleanup runs hourly.
+      </p>
+    </div>
   );
 }
 
