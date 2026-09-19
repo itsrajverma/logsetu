@@ -1,0 +1,43 @@
+{
+  "name": "@logsetu/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LogSetu server: log ingestion API + dashboard",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev -p 8686",
+    "build": "pnpm prisma:generate && next build",
+    "start": "next start -p ${PORT:-8686}",
+    "lint": "next lint",
+    "typecheck": "pnpm prisma:generate && tsc --noEmit",
+    "prisma:generate": "prisma generate --schema prisma/sqlite/schema.prisma && prisma generate --schema prisma/postgres/schema.prisma",
+    "db:push": "prisma db push",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:diff": "node scripts/diff.mjs",
+    "db:studio": "prisma studio",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "better-sqlite3": "^12.11.1",
+    "next": "^16.3.5",
+    "pg": "^8.16.3",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.19.0",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "prisma": "^7.10.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}

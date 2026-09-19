@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0d0d0f;
+  --color-surface: #141416;
+  --color-surface-2: #1b1b1e;
+  --color-surface-3: #222226;
+  --color-border: #2a2a2e;
+  --color-border-strong: #3a3a40;
+  --color-ink: #f2f2f0;
+  --color-ink-2: #b4b4ad;
+  --color-ink-3: #7c7c78;
+  --color-accent: #3987e5;
+  --color-accent-strong: #5598e7;
+
+  --color-level-debug: #8b8f98;
+  --color-level-info: #3987e5;
+  --color-level-warn: #c98500;
+  --color-level-error: #e34948;
+  --color-level-fatal: #9085e9;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.input {
+  @apply bg-surface-2 border border-border rounded-md px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent;
+}
+
+.btn {
+  @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-sm text-ink hover:bg-surface-3 hover:border-border-strong disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+}
+
+.btn-primary {
+  @apply border-accent bg-accent text-white hover:bg-accent-strong hover:border-accent-strong;
+}
+
+.btn-danger {
+  @apply hover:border-level-error hover:text-level-error;
+}
+
+.badge {
+  @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide leading-none;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.live-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}

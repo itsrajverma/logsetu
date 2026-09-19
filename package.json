@@ -1,0 +1,25 @@
+{
+  "name": "logsetu",
+  "private": true,
+  "version": "0.1.0",
+  "description": "LogSetu — open-source, self-hostable log management for Next.js/React + Django",
+  "license": "MIT",
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@logsetu/server",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:push": "pnpm --filter @logsetu/server db:push",
+    "db:studio": "pnpm --filter @logsetu/server db:studio"
+  },
+  "devDependencies": {
+    "dotenv": "^18.0.0",
+    "turbo": "^2.11.2",
+    "typescript": "^5.9.3"
+  }
+}

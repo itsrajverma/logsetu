@@ -1,0 +1,53 @@
+# Publishes logsetu-js to npm and logsetu-django to PyPI when a matching tag is pushed:
+#   js-v0.1.0      → npm
+#   django-v0.1.0  → PyPI
+# Requires repository secrets NPM_TOKEN and PYPI_TOKEN (or trusted publishing for PyPI).
+name: Release packages
+
+on:
+  push:
+    tags: ["js-v*", "django-v*"]
+
+jobs:
+  npm:
+    if: startsWith(github.ref_name, 'js-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter logsetu-js build && pnpm --filter logsetu-js test
+      - run: pnpm --filter logsetu-js publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi:
+    if: startsWith(github.ref_name, 'django-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/logsetu-django
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build && python -m twine check dist/*
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/logsetu-django/dist
+          password: ${{ secrets.PYPI_TOKEN }}

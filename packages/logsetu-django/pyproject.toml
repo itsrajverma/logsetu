@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "logsetu-django"
+version = "0.1.0"
+description = "LogSetu SDK for Django & DRF — ship Python logging records and request errors to your self-hosted LogSetu server"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Raj Verma" }]
+requires-python = ">=3.9"
+keywords = ["logging", "django", "drf", "error-tracking", "self-hosted", "sentry-alternative", "logsetu"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: Django",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: System :: Logging",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+django = ["Django>=3.2"]
+dev = ["Django>=3.2", "pytest>=8", "pytest-django>=4.8", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/itsrajverma/logsetu"
+Documentation = "https://github.com/itsrajverma/logsetu/tree/main/docs"
+Repository = "https://github.com/itsrajverma/logsetu"
+Issues = "https://github.com/itsrajverma/logsetu/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/logsetu"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/logsetu", "tests", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+pythonpath = ["src", "."]

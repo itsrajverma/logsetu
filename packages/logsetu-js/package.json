@@ -1,0 +1,60 @@
+{
+  "name": "logsetu-js",
+  "version": "0.1.0",
+  "description": "Lightweight LogSetu SDK for Next.js, React and Node.js — ship logs to your self-hosted LogSetu server",
+  "license": "MIT",
+  "author": "Raj Verma",
+  "homepage": "https://github.com/itsrajverma/logsetu#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsrajverma/logsetu.git",
+    "directory": "packages/logsetu-js"
+  },
+  "bugs": "https://github.com/itsrajverma/logsetu/issues",
+  "keywords": ["logging", "logs", "nextjs", "react", "error-tracking", "self-hosted", "sentry-alternative", "logsetu"],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.js",
+      "require": "./dist/next.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build && pnpm test"
+  },
+  "peerDependencies": {
+    "react": ">=17"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "react": "^19.3.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  },
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" }
+}

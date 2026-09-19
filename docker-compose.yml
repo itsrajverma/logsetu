@@ -1,0 +1,21 @@
+# LogSetu — self-hosted log management. Run:  docker compose up -d
+# Dashboard: http://localhost:8686  (password: LOGSETU_ADMIN_PASSWORD)
+services:
+  logsetu:
+    image: ghcr.io/itsrajverma/logsetu:latest
+    container_name: logsetu
+    restart: unless-stopped
+    ports:
+      - "${LOGSETU_PORT:-8686}:8686"
+    environment:
+      LOGSETU_ADMIN_PASSWORD: ${LOGSETU_ADMIN_PASSWORD:-change-me}
+      # SQLite (default) lives on the volume below. To use Postgres, set DATABASE_URL in .env
+      # (see docker-compose.prod.yml).
+      DATABASE_URL: ${DATABASE_URL:-file:/data/logsetu.db}
+      LOGSETU_SECRET: ${LOGSETU_SECRET:-}
+      LOGSETU_RATE_LIMIT_PER_MIN: ${LOGSETU_RATE_LIMIT_PER_MIN:-1000}
+    volumes:
+      - logsetu-data:/data
+
+volumes:
+  logsetu-data:
