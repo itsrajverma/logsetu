@@ -11,8 +11,8 @@ def index(request):
     return JsonResponse({"hello": "world"})
 
 
-def payroll(request):
-    log.warning("payroll run is slow", extra={"duration_ms": 1830, "employees": 412})
+def checkout(request):
+    log.warning("checkout is slow", extra={"duration_ms": 1830, "cart_items": 12})
     return JsonResponse({"status": "queued"})
 
 
@@ -21,4 +21,4 @@ def crash(request):
     return JsonResponse({"salary": employees["missing"]["salary"]})
 
 
-urlpatterns = [path("", index), path("payroll/", payroll), path("crash/", crash)]
+urlpatterns = [path("", index), path("checkout/", checkout), path("crash/", crash)]

@@ -43,7 +43,7 @@ reports unhandled exceptions (and 5xx responses) with the request path, method, 
 import logging
 log = logging.getLogger(__name__)
 
-log.warning("Payroll run is slow", extra={"duration_ms": 1830, "employees": 412})
+log.warning("Checkout is slow", extra={"duration_ms": 1830, "cart_items": 12})
 try:
     charge(card)
 except PaymentError:
