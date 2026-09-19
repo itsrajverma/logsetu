@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/dashboard.png" alt="LogSetu dashboard" width="900" />
+  <img src="docs/assets/logsetu-dashboard.png" alt="LogSetu dashboard" width="900" />
 </p>
 
 ---
