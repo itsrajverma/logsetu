@@ -97,6 +97,7 @@ That's it — logs show up in the dashboard in real time.
 - ✅ **Detail panel** — full message, stack trace, metadata JSON, one-click "filter by this source/env", copy-as-JSON
 - ✅ **Error grouping** — `error`/`fatal` logs with the same stack trace (or normalized message) collapse into *issues* with counts, first/last seen, resolve/ignore, and automatic reopen on regression
 - ✅ **Alerting** — Slack, email or webhook notifications when matching logs cross a threshold in a time window, or when a new issue / regression appears; cooldowns, test sends and a delivery history
+- ✅ **OpenTelemetry export** — optionally forward every log to any OTLP/HTTP collector (severity, attributes, trace/span ids mapped) — [docs](docs/opentelemetry.md)
 - ✅ **24h overview** — counts by level and an hourly activity chart per project
 - ✅ **Multi-project** — separate API keys, rotate keys, ready-to-paste integration snippets per project
 - ✅ **`logsetu-js`** — ~2.5 KB gzipped, batching + retry, `captureException`, `<LogSetuErrorBoundary>`, Next.js `instrumentation.ts` hooks, browser + Node + Edge, fully typed
@@ -182,7 +183,7 @@ Full reference (ingest, query, projects, stats): [docs/http-api.md](docs/http-ap
 - [x] **Log retention policies** — auto-delete logs older than N days per project
 - [x] **SSE real-time streaming** — push instead of polling in the dashboard
 - [x] **Error grouping** — collapse identical stack traces into issues with counts
-- [ ] **OpenTelemetry export** — forward logs to any OTLP collector
+- [x] **OpenTelemetry export** — forward logs to any OTLP collector
 - [ ] **Grafana integration** — data source plugin / Loki-compatible query endpoint
 - [ ] **More SDKs** — FastAPI / Flask, Express / Hono, Go
 - [ ] **Multi-user auth** — teams, read-only users, SSO

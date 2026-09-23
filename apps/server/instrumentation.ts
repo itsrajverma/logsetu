@@ -4,5 +4,7 @@ export async function register() {
     startRetentionScheduler();
     const { startAlertEngine } = await import("./lib/alerts");
     startAlertEngine();
+    const { startOtlpExporter } = await import("./lib/otlp");
+    await startOtlpExporter();
   }
 }

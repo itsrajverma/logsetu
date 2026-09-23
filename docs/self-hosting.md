@@ -38,6 +38,7 @@ in `.env` — the server picks the driver from the URL scheme.
 | `LOGSETU_PUBLIC_URL` | unset | External URL of the dashboard (e.g. `https://logs.example.com`). Used for links in alert notifications. |
 | `LOGSETU_SMTP_URL` | unset | Enables email alerts, e.g. `smtps://user:pass@smtp.example.com:465` or `smtp://user:pass@host:587`. |
 | `LOGSETU_SMTP_FROM` | `LogSetu <logsetu@localhost>` | Sender for email alerts. |
+| `LOGSETU_OTLP_ENDPOINT` | unset | Forward all logs to an OTLP/HTTP collector — see [OpenTelemetry export](opentelemetry.md). Also `LOGSETU_OTLP_HEADERS`, `LOGSETU_OTLP_PROJECTS`, `LOGSETU_OTLP_INTERVAL_MS`. |
 | `LOGSETU_SECURE_COOKIES` | `0` | Set to `1` when served over HTTPS so the session cookie gets the `Secure` flag. |
 
 ## Reverse proxy (HTTPS)
