@@ -58,6 +58,8 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto https;
         client_max_body_size 5m;   # ingest batches
+        proxy_buffering off;       # live tail (Server-Sent Events)
+        proxy_read_timeout 1h;
     }
 }
 ```

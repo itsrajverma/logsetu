@@ -65,11 +65,41 @@ export function LogExplorer({ projectId, projectName }: { projectId: string; pro
     return () => clearInterval(t);
   }, [fetchStats]);
 
+  // Live updates: Server-Sent Events push, falling back to polling if the stream can't be kept open.
+  const [transport, setTransport] = useState<"sse" | "poll">("sse");
   useEffect(() => {
     if (!live || filters.page !== 1) return;
-    const t = setInterval(() => void fetchLogs(true), POLL_MS);
-    return () => clearInterval(t);
-  }, [live, filters.page, fetchLogs]);
+    if (transport === "poll" || typeof EventSource === "undefined") {
+      const t = setInterval(() => void fetchLogs(true), POLL_MS);
+      return () => clearInterval(t);
+    }
+    const q = filtersToQuery(projectId, filters, PAGE_SIZE);
+    q.delete("page");
+    q.delete("limit");
+    // Relative ranges ("last 24h") always include brand-new logs; don't pin the lower bound at connect time.
+    if (filters.range !== "custom") q.delete("from");
+    const es = new EventSource(`/api/v1/logs/stream?${q.toString()}`);
+    let failures = 0;
+    let opened = false;
+    es.addEventListener("ready", () => {
+      failures = 0;
+      // Catch up on anything ingested while (re)connecting.
+      if (opened) void fetchLogs(true);
+      opened = true;
+    });
+    es.addEventListener("logs", (ev) => {
+      const incoming = JSON.parse((ev as MessageEvent<string>).data) as LogDTO[];
+      setData((prev) => mergeLive(prev, incoming));
+    });
+    es.onerror = () => {
+      failures += 1;
+      if (es.readyState === EventSource.CLOSED || failures >= 3) {
+        es.close();
+        setTransport("poll");
+      }
+    };
+    return () => es.close();
+  }, [live, transport, projectId, filters, fetchLogs]);
 
   useEffect(() => setSearchDraft(filters.search), [filters.search]);
 
@@ -207,7 +237,11 @@ export function LogExplorer({ projectId, projectName }: { projectId: string; pro
           type="button"
           className={`btn py-1 text-xs ${live ? "border-level-info/60" : ""}`}
           onClick={() => setLive((v) => !v)}
-          title={live ? "Pause live updates" : "Resume live updates"}
+          title={
+            live
+              ? `Pause live updates (${transport === "sse" ? "streaming" : "polling every 3s"})`
+              : "Resume live updates"
+          }
         >
           <span
             className={`h-2 w-2 rounded-full ${live ? "bg-level-info live-dot" : "bg-ink-3"}`}
@@ -250,6 +284,19 @@ export function LogExplorer({ projectId, projectName }: { projectId: string; pro
       </div>
     </div>
   );
+}
+
+/** Prepend streamed logs to the first page, newest first, keeping page size and total in sync. */
+function mergeLive(prev: LogsResponse | null, incoming: LogDTO[]): LogsResponse | null {
+  if (!prev) return prev;
+  const seen = new Set(prev.logs.map((l) => l.id));
+  const fresh = incoming.filter((l) => !seen.has(l.id));
+  if (fresh.length === 0) return prev;
+  const logs = [...fresh, ...prev.logs]
+    .sort((a, b) => (a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : a.id < b.id ? 1 : -1))
+    .slice(0, prev.limit);
+  const total = prev.total + fresh.length;
+  return { ...prev, logs, total, hasMore: prev.page * prev.limit < total };
 }
 
 function Footer({

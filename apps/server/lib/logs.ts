@@ -34,7 +34,22 @@ export function buildWhere(q: LogsQuery): Prisma.LogEntryWhereInput {
   return where;
 }
 
-export type LogsPage = { logs: LogRecord[]; total: number; page: number; limit: number; hasMore: boolean };
+/** In-memory equivalent of buildWhere(), used to filter live-streamed logs. */
+export function matchesQuery(
+  log: LogRecord,
+  q: Pick<LogsQuery, "projectId"> & Partial<Omit<LogsQuery, "projectId" | "page" | "limit">>,
+): boolean {
+  if (log.projectId !== q.projectId) return false;
+  if (q.level && q.level.length > 0 && !(q.level as string[]).includes(log.level)) return false;
+  if (q.source && log.source !== q.source) return false;
+  if (q.environment && log.environment !== q.environment) return false;
+  if (q.from && log.timestamp < q.from) return false;
+  if (q.to && log.timestamp > q.to) return false;
+  if (q.search && !log.message.toLowerCase().includes(q.search.toLowerCase())) return false;
+  return true;
+}
+
+export type LogsPage ={ logs: LogRecord[]; total: number; page: number; limit: number; hasMore: boolean };
 
 export async function queryLogs(q: LogsQuery): Promise<LogsPage> {
   const where = buildWhere(q);

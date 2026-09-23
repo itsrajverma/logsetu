@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { db } from "@/lib/db";
 import { error, zodError } from "@/lib/api";
 import { extractBearer, getProjectFromApiKey } from "@/lib/auth";
+import { publishLogs } from "@/lib/events";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { parseIngestBody } from "@/lib/validation";
 import type { Prisma } from "@/generated/sqlite/client";
@@ -55,7 +56,8 @@ export async function POST(req: Request) {
   // Respond 202 immediately; persist after the response is flushed.
   after(async () => {
     try {
-      await db.logEntry.createMany({ data: rows });
+      const created = await db.logEntry.createManyAndReturn({ data: rows });
+      publishLogs(project.id, created);
     } catch (e) {
       console.error("[logsetu] failed to persist batch", e);
     }

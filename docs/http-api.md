@@ -59,6 +59,28 @@ Newest first. Admin session or project API key (the key's project is enforced re
   "total": 1234, "page": 1, "limit": 50, "hasMore": true }
 ```
 
+## `GET /api/v1/logs/stream`
+
+Server-Sent Events stream of **newly ingested** logs — this is what the dashboard's *Live* toggle uses. Same auth and
+filters as `GET /api/v1/logs` (`projectId`, `level`, `source`, `environment`, `search`, `from`, `to`; no paging).
+
+```
+$ curl -N -H "Authorization: Bearer $LOGSETU_API_KEY" "https://logs.example.com/api/v1/logs/stream?level=error,fatal"
+retry: 3000
+event: ready
+data: {}
+
+event: logs
+data: [{"id":"…","level":"error","message":"…","timestamp":"…", …}]
+
+: ping
+```
+
+- `event: logs` carries a JSON array (one ingest batch, filtered). Comment lines (`: ping`) are sent every 15s.
+- On reconnect the stream does not replay missed logs — re-query `GET /api/v1/logs` after a `ready` event.
+- The event bus is in-process: with several server replicas behind a load balancer, a stream only sees logs ingested
+  by its own replica.
+
 ## `GET /api/v1/projects/:id/stats`
 
 Admin session or that project's API key.
