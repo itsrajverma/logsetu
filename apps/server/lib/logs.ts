@@ -13,6 +13,7 @@ export type LogRecord = {
   meta: unknown;
   timestamp: Date;
   createdAt: Date;
+  issueId: string | null;
 };
 
 export function buildWhere(q: LogsQuery): Prisma.LogEntryWhereInput {
@@ -20,6 +21,7 @@ export function buildWhere(q: LogsQuery): Prisma.LogEntryWhereInput {
   if (q.level && q.level.length > 0) where.level = q.level.length === 1 ? q.level[0] : { in: q.level };
   if (q.source) where.source = q.source;
   if (q.environment) where.environment = q.environment;
+  if (q.issueId) where.issueId = q.issueId;
   if (q.from || q.to) {
     where.timestamp = {};
     if (q.from) where.timestamp.gte = q.from;
@@ -43,13 +45,14 @@ export function matchesQuery(
   if (q.level && q.level.length > 0 && !(q.level as string[]).includes(log.level)) return false;
   if (q.source && log.source !== q.source) return false;
   if (q.environment && log.environment !== q.environment) return false;
+  if (q.issueId && log.issueId !== q.issueId) return false;
   if (q.from && log.timestamp < q.from) return false;
   if (q.to && log.timestamp > q.to) return false;
   if (q.search && !log.message.toLowerCase().includes(q.search.toLowerCase())) return false;
   return true;
 }
 
-export type LogsPage ={ logs: LogRecord[]; total: number; page: number; limit: number; hasMore: boolean };
+export type LogsPage = { logs: LogRecord[]; total: number; page: number; limit: number; hasMore: boolean };
 
 export async function queryLogs(q: LogsQuery): Promise<LogsPage> {
   const where = buildWhere(q);

@@ -39,6 +39,8 @@ export function runRetentionCleanup(projectId?: string): Promise<RetentionResult
       if (!days) continue;
       const cutoff = new Date(Date.now() - days * 86_400_000);
       const { count } = await db.logEntry.deleteMany({ where: { projectId: p.id, timestamp: { lt: cutoff } } });
+      // Issues whose every event has aged out go with them.
+      await db.issue.deleteMany({ where: { projectId: p.id, lastSeen: { lt: cutoff } } });
       result.projects.push({ id: p.id, name: p.name, retentionDays: days, deleted: count });
       result.totalDeleted += count;
     }

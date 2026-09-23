@@ -78,6 +78,7 @@ export const logsQuerySchema = z.object({
   source: z.string().optional(),
   environment: z.string().optional(),
   search: z.string().max(500).optional(),
+  issueId: z.string().optional(),
   from: dateParam,
   to: dateParam,
   page: z.coerce.number().int().min(1).default(1),
@@ -95,6 +96,21 @@ export const updateProjectSchema = z.object({
   rotateKey: z.boolean().optional(),
   // null = fall back to the server default; omitted = unchanged
   retentionDays: z.number().int().min(1).max(3650).nullable().optional(),
+});
+
+export const issuesQuerySchema = z.object({
+  projectId: z.string().min(1),
+  status: z.enum(["open", "resolved", "ignored", "all"]).default("open"),
+  sort: z.enum(["lastSeen", "firstSeen", "count"]).default("lastSeen"),
+  search: z.string().max(500).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export type IssuesQuery = z.infer<typeof issuesQuerySchema>;
+
+export const updateIssueSchema = z.object({
+  status: z.enum(["open", "resolved", "ignored"]),
 });
 
 export const loginSchema = z.object({

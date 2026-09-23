@@ -17,6 +17,7 @@ export function TopBar({ projects }: { projects: ProjectSummary[] }) {
       </Suspense>
       <nav className="ml-auto flex items-center gap-1 text-sm">
         <NavLink href="/dashboard">Logs</NavLink>
+        <NavLink href="/dashboard/issues">Issues</NavLink>
         <NavLink href="/dashboard/projects">Projects</NavLink>
         <a
           href="https://github.com/itsrajverma/logsetu"
@@ -33,8 +34,22 @@ export function TopBar({ projects }: { projects: ProjectSummary[] }) {
 }
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<NavAnchor href={href}>{children}</NavAnchor>}>
+      <NavLinkWithProject href={href}>{children}</NavLinkWithProject>
+    </Suspense>
+  );
+}
+
+// Keep the selected project when moving between Logs / Issues / Projects.
+function NavLinkWithProject({ href, children }: { href: string; children: React.ReactNode }) {
+  const project = useSearchParams().get("project");
+  return <NavAnchor href={project ? `${href}?project=${encodeURIComponent(project)}` : href} match={href}>{children}</NavAnchor>;
+}
+
+function NavAnchor({ href, match = href, children }: { href: string; match?: string; children: React.ReactNode }) {
   const pathname = usePathname();
-  const active = pathname === href;
+  const active = pathname === match;
   return (
     <Link
       href={href}

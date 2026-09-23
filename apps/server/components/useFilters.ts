@@ -17,6 +17,7 @@ export type Filters = {
   source: string;
   environment: string;
   search: string;
+  issue: string;
   range: RangePreset | "all" | "custom";
   from: string;
   to: string;
@@ -35,6 +36,7 @@ export function useFilters(projectId: string) {
       source: sp.get("source") ?? "",
       environment: sp.get("environment") ?? "",
       search: sp.get("search") ?? "",
+      issue: sp.get("issue") ?? "",
       range: range in RANGE_PRESETS || range === "all" || range === "custom" ? range : "24h",
       from: sp.get("from") ?? "",
       to: sp.get("to") ?? "",
@@ -52,6 +54,7 @@ export function useFilters(projectId: string) {
       if (next.source) q.set("source", next.source);
       if (next.environment) q.set("environment", next.environment);
       if (next.search) q.set("search", next.search);
+      if (next.issue) q.set("issue", next.issue);
       if (next.range !== "24h") q.set("range", next.range);
       if (next.range === "custom") {
         if (next.from) q.set("from", next.from);
@@ -73,6 +76,7 @@ export function filtersToQuery(projectId: string, f: Filters, limit: number): UR
   if (f.source) q.set("source", f.source);
   if (f.environment) q.set("environment", f.environment);
   if (f.search) q.set("search", f.search);
+  if (f.issue) q.set("issueId", f.issue);
   if (f.range === "custom") {
     if (f.from) q.set("from", new Date(f.from).toISOString());
     if (f.to) q.set("to", new Date(f.to).toISOString());

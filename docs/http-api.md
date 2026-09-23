@@ -50,6 +50,7 @@ Newest first. Admin session or project API key (the key's project is enforced re
 | `level` | comma-separated: `error,fatal` |
 | `source` / `environment` | exact match |
 | `search` | substring match on message (case-insensitive) |
+| `issueId` | only events grouped into this issue |
 | `from` / `to` | ISO timestamps |
 | `page` / `limit` | default `1` / `50`, max limit `500` |
 
@@ -80,6 +81,39 @@ data: [{"id":"…","level":"error","message":"…","timestamp":"…", …}]
 - On reconnect the stream does not replay missed logs — re-query `GET /api/v1/logs` after a `ready` event.
 - The event bus is in-process: with several server replicas behind a load balancer, a stream only sees logs ingested
   by its own replica.
+
+## Issues (error grouping)
+
+Every `error` / `fatal` log is fingerprinted and grouped into an **issue**. The fingerprint is built from:
+
+1. `meta.fingerprint` (string or array of strings) if the SDK sent one — full control over grouping;
+2. otherwise, the log's `source` + exception type + stack frames (function + file; line numbers, bundle hashes and
+   absolute paths are ignored so the same bug groups across deploys). Stacks are read from `meta.stack` (also
+   `stacktrace`, `traceback`, `exc_text`, `error.stack`) — both SDKs send this automatically;
+3. with no stack: `source` + the first line of the message with numbers, UUIDs, emails, URLs, IPs and quoted values
+   normalized away (`"User 42 not found"` and `"User 97 not found"` are one issue).
+
+Resolved issues reopen automatically when a new event arrives; ignored issues keep counting but stay out of the open
+list. Issues whose last event is older than the project's retention window are deleted with their logs.
+
+### `GET /api/v1/issues`
+
+Admin session or project API key. Query: `projectId`, `status` (`open` default · `resolved` · `ignored` · `all`),
+`sort` (`lastSeen` default · `firstSeen` · `count`), `search` (title substring), `page`, `limit` (max 100).
+
+```json
+{ "issues": [ { "id": "…", "title": "TypeError: x is undefined", "culprit": "checkout (chunks/cart.js)",
+                "level": "error", "source": "web", "status": "open", "count": 214, "last24h": 12,
+                "firstSeen": "…", "lastSeen": "…", "resolvedAt": null } ],
+  "total": 3, "page": 1, "limit": 50, "hasMore": false, "counts": { "open": 3, "resolved": 5, "ignored": 1 } }
+```
+
+Events for an issue: `GET /api/v1/logs?projectId=…&issueId=…`.
+
+### `GET /api/v1/issues/:id` · `PATCH /api/v1/issues/:id` · `DELETE /api/v1/issues/:id`
+
+`GET` works with an admin session or the project's API key. `PATCH { "status": "resolved" | "ignored" | "open" }` and
+`DELETE` (events are kept, just ungrouped) require the admin session.
 
 ## `GET /api/v1/projects/:id/stats`
 

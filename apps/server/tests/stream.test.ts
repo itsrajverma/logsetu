@@ -12,6 +12,7 @@ const log = (over: Partial<LogRecord> = {}): LogRecord => ({
   meta: null,
   timestamp: new Date("2026-09-20T10:00:00Z"),
   createdAt: new Date("2026-09-20T10:00:00Z"),
+  issueId: null,
   ...over,
 });
 

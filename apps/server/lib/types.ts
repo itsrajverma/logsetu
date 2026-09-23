@@ -19,6 +19,31 @@ export type LogDTO = {
   meta: Record<string, unknown> | null;
   timestamp: string;
   createdAt: string;
+  issueId: string | null;
+};
+
+export type IssueDTO = {
+  id: string;
+  projectId: string;
+  title: string;
+  culprit: string | null;
+  level: string;
+  source: string;
+  status: "open" | "resolved" | "ignored";
+  count: number;
+  last24h: number;
+  firstSeen: string;
+  lastSeen: string;
+  resolvedAt: string | null;
+};
+
+export type IssuesResponse = {
+  issues: IssueDTO[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+  counts: Record<"open" | "resolved" | "ignored", number>;
 };
 
 export type LogsResponse = {

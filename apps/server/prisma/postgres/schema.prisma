@@ -14,6 +14,7 @@ model Project {
   retentionDays Int?       // null = use LOGSETU_DEFAULT_RETENTION_DAYS (or keep forever)
   createdAt     DateTime   @default(now())
   logs          LogEntry[]
+  issues        Issue[]
 }
 
 model LogEntry {
@@ -27,10 +28,36 @@ model LogEntry {
   meta        Json?
   timestamp   DateTime @default(now())
   createdAt   DateTime @default(now())
+  issueId     String?
+  issue       Issue?   @relation(fields: [issueId], references: [id], onDelete: SetNull)
 
   @@index([projectId, timestamp(sort: Desc)])
   @@index([projectId, level, timestamp(sort: Desc)])
   @@index([projectId, source])
   @@index([projectId, environment])
+  @@index([issueId, timestamp(sort: Desc)])
+}
+
+// Error grouping: error/fatal logs with the same fingerprint collapse into one issue.
+model Issue {
+  id          String     @id @default(cuid())
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fingerprint String
+  title       String
+  culprit     String?
+  level       String
+  source      String
+  status      String     @default("open") // open | resolved | ignored
+  count       Int        @default(0)
+  firstSeen   DateTime
+  lastSeen    DateTime
+  resolvedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  logs        LogEntry[]
+
+  @@unique([projectId, fingerprint])
+  @@index([projectId, status, lastSeen(sort: Desc)])
+  @@index([projectId, lastSeen(sort: Desc)])
 }
 

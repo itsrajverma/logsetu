@@ -47,6 +47,13 @@ export function LogDetail({
           <Field label="Environment">
             <FilterLink onClick={() => onFilter({ environment: log.environment })}>{log.environment}</FilterLink>
           </Field>
+          {log.issueId && (
+            <Field label="Issue">
+              <FilterLink onClick={() => onFilter({ issue: log.issueId ?? "", range: "all" })}>
+                All events in this issue
+              </FilterLink>
+            </Field>
+          )}
           <Field label="Received">
             <span className="mono text-ink-2">{formatDateTime(log.createdAt)}</span>
           </Field>

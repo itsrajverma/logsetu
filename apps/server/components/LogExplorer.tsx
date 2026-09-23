@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LogDTO, LogsResponse, StatsResponse } from "@/lib/types";
+import type { IssueDTO, LogDTO, LogsResponse, StatsResponse } from "@/lib/types";
 import { LOG_LEVELS } from "@/lib/constants";
 import { LEVEL_ORDER, levelColor } from "@/lib/levels";
 import { filtersToQuery, RANGE_PRESETS, useFilters, type RangePreset } from "./useFilters";
@@ -119,11 +119,47 @@ export function LogExplorer({ projectId, projectName }: { projectId: string; pro
   };
 
   const hasFilters =
-    filters.level.length > 0 || filters.source || filters.environment || filters.search || filters.range !== "24h";
+    filters.level.length > 0 ||
+    filters.source ||
+    filters.environment ||
+    filters.search ||
+    filters.issue ||
+    filters.range !== "24h";
+
+  const [issue, setIssue] = useState<IssueDTO | null>(null);
+  useEffect(() => {
+    if (!filters.issue) return setIssue(null);
+    let cancelled = false;
+    fetch(`/api/v1/issues/${filters.issue}`, { cache: "no-store" })
+      .then((r) => (r.ok ? (r.json() as Promise<{ issue: IssueDTO }>) : null))
+      .then((d) => !cancelled && setIssue(d?.issue ?? null))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [filters.issue]);
 
   return (
     <div className="h-[calc(100vh-3rem)] flex flex-col">
       <StatsBar stats={stats} activeLevels={filters.level} onToggleLevel={toggleLevel} />
+
+      {filters.issue && (
+        <div className="border-b border-border bg-surface-2 px-4 py-1.5 flex items-center gap-2 text-xs">
+          <span className="text-ink-3">Issue</span>
+          <span className="mono text-ink truncate">{issue?.title ?? filters.issue}</span>
+          {issue && (
+            <span className="text-ink-3 shrink-0">
+              · {issue.count.toLocaleString()} events · {issue.status}
+            </span>
+          )}
+          <a className="ml-auto text-accent hover:underline shrink-0" href={`/dashboard/issues?project=${projectId}`}>
+            All issues
+          </a>
+          <button className="btn py-0.5 px-2 text-xs" onClick={() => update({ issue: "" })} title="Show all logs">
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="border-b border-border bg-surface px-4 py-2 flex flex-wrap items-center gap-2">
@@ -226,7 +262,7 @@ export function LogExplorer({ projectId, projectName }: { projectId: string; pro
           <button
             className="btn py-1 text-xs"
             onClick={() =>
-              update({ level: [], source: "", environment: "", search: "", range: "24h", from: "", to: "" })
+              update({ level: [], source: "", environment: "", search: "", issue: "", range: "24h", from: "", to: "" })
             }
           >
             Clear
