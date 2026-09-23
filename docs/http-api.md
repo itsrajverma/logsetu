@@ -115,6 +115,47 @@ Events for an issue: `GET /api/v1/logs?projectId=…&issueId=…`.
 `GET` works with an admin session or the project's API key. `PATCH { "status": "resolved" | "ignored" | "open" }` and
 `DELETE` (events are kept, just ungrouped) require the admin session.
 
+## Alerts (admin session only)
+
+Alert rules notify a **Slack** incoming webhook, **email** recipients (needs `LOGSETU_SMTP_URL`) or any **webhook**.
+Two triggers:
+
+- `threshold` — at least `threshold` logs matching `levels` (and optional `source` / `environment`) within the last
+  `windowMinutes`. Evaluated a moment after matching logs arrive (at most every 10s per rule).
+- `new_issue` — an error/fatal [issue](#issues-error-grouping) is created, or a resolved one regresses.
+
+After firing, a rule stays quiet for `cooldownMinutes` (use `0` to get every new issue).
+
+| Method | Path | Body / notes |
+|---|---|---|
+| `GET` | `/api/v1/alerts?projectId=…` | `{ rules, events, emailConfigured, publicUrlConfigured }` — `events` = last 30 notifications |
+| `POST` | `/api/v1/alerts` | `{ projectId, name, channel: "slack"\|"email"\|"webhook", target, trigger?, levels?, threshold?, windowMinutes?, cooldownMinutes?, source?, environment?, enabled? }` |
+| `PATCH` | `/api/v1/alerts/:id` | any subset of the fields above |
+| `DELETE` | `/api/v1/alerts/:id` | |
+| `POST` | `/api/v1/alerts/:id/test` | sends a test notification now (`502` + `{ ok: false, error }` if delivery fails) |
+
+Defaults: `trigger: "threshold"`, `levels: ["error","fatal"]`, `threshold: 10`, `windowMinutes: 5`,
+`cooldownMinutes: 15`. For email, `target` is a comma-separated list of addresses.
+
+Webhook deliveries are a JSON `POST` (10s timeout; non-2xx counts as a failure and shows in the history):
+
+```json
+{
+  "title": "[LogSetu] acme-storefront: Error spike",
+  "text": "12 error/fatal logs in the last 5 min — threshold is 10.\n• [error] api: Redis timeout …",
+  "url": "https://logs.example.com/dashboard?project=…&level=error,fatal&range=1h",
+  "event": "threshold",
+  "rule": { "id": "…", "name": "Error spike", "levels": ["error","fatal"], "threshold": 10, "windowMinutes": 5 },
+  "project": { "id": "…", "name": "acme-storefront" },
+  "count": 12,
+  "samples": [ { "level": "error", "message": "…", "source": "api", "timestamp": "…" } ]
+}
+```
+
+`new_issue` payloads have `"event": "new_issue"` and an `issues` array (`kind: "new" | "regression"`, title, culprit,
+count, …). `url` is only set when `LOGSETU_PUBLIC_URL` is configured. Alerts are evaluated in-process, so run a single
+server replica (or accept that each replica only alerts on the logs it ingested).
+
 ## `GET /api/v1/projects/:id/stats`
 
 Admin session or that project's API key.

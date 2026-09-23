@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import { db } from "@/lib/db";
 import { error, zodError } from "@/lib/api";
 import { extractBearer, getProjectFromApiKey } from "@/lib/auth";
-import { publishLogs } from "@/lib/events";
+import { publishIssues, publishLogs } from "@/lib/events";
 import { assignIssues } from "@/lib/grouping";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { parseIngestBody } from "@/lib/validation";
@@ -57,9 +57,13 @@ export async function POST(req: Request) {
   // Respond 202 immediately; persist after the response is flushed.
   after(async () => {
     try {
-      await assignIssues(project.id, rows).catch((e) => console.error("[logsetu] error grouping failed", e));
+      const issues = await assignIssues(project.id, rows).catch((e) => {
+        console.error("[logsetu] error grouping failed", e);
+        return [];
+      });
       const created = await db.logEntry.createManyAndReturn({ data: rows });
       publishLogs(project.id, created);
+      publishIssues(project.id, issues);
     } catch (e) {
       console.error("[logsetu] failed to persist batch", e);
     }

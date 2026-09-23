@@ -35,6 +35,9 @@ in `.env` — the server picks the driver from the URL scheme.
 | `LOGSETU_RATE_LIMIT_PER_MIN` | `1000` | Per-project ingestion limit. Exceeding it returns `429` with `Retry-After`; SDKs back off automatically. |
 | `LOGSETU_DEFAULT_RETENTION_DAYS` | unset | Delete logs older than N days for projects that have no retention of their own. Per-project values are set in the dashboard (Projects → Log retention). Unset = keep forever. |
 | `LOGSETU_RETENTION_INTERVAL_MINUTES` | `60` | How often the cleanup job runs. |
+| `LOGSETU_PUBLIC_URL` | unset | External URL of the dashboard (e.g. `https://logs.example.com`). Used for links in alert notifications. |
+| `LOGSETU_SMTP_URL` | unset | Enables email alerts, e.g. `smtps://user:pass@smtp.example.com:465` or `smtp://user:pass@host:587`. |
+| `LOGSETU_SMTP_FROM` | `LogSetu <logsetu@localhost>` | Sender for email alerts. |
 | `LOGSETU_SECURE_COOKIES` | `0` | Set to `1` when served over HTTPS so the session cookie gets the `Secure` flag. |
 
 ## Reverse proxy (HTTPS)

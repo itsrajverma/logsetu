@@ -18,6 +18,7 @@ export function TopBar({ projects }: { projects: ProjectSummary[] }) {
       <nav className="ml-auto flex items-center gap-1 text-sm">
         <NavLink href="/dashboard">Logs</NavLink>
         <NavLink href="/dashboard/issues">Issues</NavLink>
+        <NavLink href="/dashboard/alerts">Alerts</NavLink>
         <NavLink href="/dashboard/projects">Projects</NavLink>
         <a
           href="https://github.com/itsrajverma/logsetu"

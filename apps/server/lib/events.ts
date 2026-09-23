@@ -1,10 +1,11 @@
 import { EventEmitter } from "node:events";
+import type { IssueChange } from "./grouping";
 import type { LogRecord } from "./logs";
 
 // In-process pub/sub for freshly ingested logs. Powers SSE streaming (and anything else that wants
 // to react to new logs). Single-instance only — with several replicas, each only sees its own ingests.
 
-type Bus = EventEmitter & { __logsetu?: true };
+type Bus = EventEmitter;
 const g = globalThis as { __logsetuBus?: Bus };
 
 function bus(): Bus {
@@ -32,4 +33,16 @@ export function subscribeLogs(projectId: string | "*", fn: LogsListener): () => 
 
 export function listenerCount(projectId: string | "*"): number {
   return bus().listenerCount(`logs:${projectId}`);
+}
+
+// Issue lifecycle changes from error grouping (new issue, regression, more events).
+export type IssuesListener = (projectId: string, changes: IssueChange[]) => void;
+
+export function publishIssues(projectId: string, changes: IssueChange[]) {
+  if (changes.length > 0) bus().emit("issues", projectId, changes);
+}
+
+export function subscribeIssues(fn: IssuesListener): () => void {
+  bus().on("issues", fn);
+  return () => bus().off("issues", fn);
 }

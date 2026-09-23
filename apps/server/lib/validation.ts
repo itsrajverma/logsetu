@@ -113,6 +113,63 @@ export const updateIssueSchema = z.object({
   status: z.enum(["open", "resolved", "ignored"]),
 });
 
+const optionalFilter = z
+  .string()
+  .trim()
+  .max(200)
+  .nullable()
+  .optional()
+  .transform((v) => (v ? v : null));
+
+// No defaults here: .partial() would re-apply them and a PATCH would silently reset omitted fields.
+const alertRuleFields = z.object({
+  name: z.string().trim().min(1).max(100),
+  enabled: z.boolean(),
+  trigger: z.enum(["threshold", "new_issue"]),
+  levels: z.array(z.enum(LOG_LEVELS)).min(1),
+  source: optionalFilter,
+  environment: optionalFilter,
+  threshold: z.number().int().min(1).max(1_000_000),
+  windowMinutes: z.number().int().min(1).max(1440),
+  cooldownMinutes: z.number().int().min(0).max(10_080),
+  channel: z.enum(["webhook", "slack", "email"]),
+  target: z.string().trim().min(1).max(2000),
+});
+
+const EMAIL_RE = /^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/;
+
+function checkTarget(rule: { channel: string; target: string }, ctx: z.RefinementCtx) {
+  if (rule.channel === "email") {
+    const bad = rule.target.split(",").map((s) => s.trim()).filter((s) => !EMAIL_RE.test(s));
+    if (bad.length) ctx.addIssue({ code: "custom", path: ["target"], message: `Invalid email address: ${bad[0] || "(empty)"}` });
+    return;
+  }
+  try {
+    const u = new URL(rule.target);
+    if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error();
+  } catch {
+    ctx.addIssue({ code: "custom", path: ["target"], message: "Must be an http(s) URL" });
+  }
+}
+
+export const createAlertRuleSchema = alertRuleFields
+  .extend({
+    projectId: z.string().min(1),
+    enabled: alertRuleFields.shape.enabled.default(true),
+    trigger: alertRuleFields.shape.trigger.default("threshold"),
+    levels: alertRuleFields.shape.levels.default(["error", "fatal"]),
+    threshold: alertRuleFields.shape.threshold.default(10),
+    windowMinutes: alertRuleFields.shape.windowMinutes.default(5),
+    cooldownMinutes: alertRuleFields.shape.cooldownMinutes.default(15),
+  })
+  .superRefine(checkTarget);
+
+/** Validate a PATCH by merging it onto the stored rule and re-checking the whole thing. */
+export const alertRulePatchSchema = alertRuleFields.partial();
+export const alertRuleSchema = alertRuleFields.superRefine(checkTarget);
+
+export type AlertRuleInput = z.infer<typeof alertRuleFields>;
+
 export const loginSchema = z.object({
   password: z.string().min(1),
 });

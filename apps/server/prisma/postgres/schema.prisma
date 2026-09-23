@@ -15,6 +15,7 @@ model Project {
   createdAt     DateTime   @default(now())
   logs          LogEntry[]
   issues        Issue[]
+  alertRules    AlertRule[]
 }
 
 model LogEntry {
@@ -61,3 +62,42 @@ model Issue {
   @@index([projectId, lastSeen(sort: Desc)])
 }
 
+
+// Alerting: notify a webhook / Slack / email when a threshold is crossed or a new issue appears.
+model AlertRule {
+  id              String       @id @default(cuid())
+  projectId       String
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name            String
+  enabled         Boolean      @default(true)
+  trigger         String       @default("threshold") // threshold | new_issue
+  levels          String       @default("error,fatal") // comma-separated
+  source          String?
+  environment     String?
+  threshold       Int          @default(10)
+  windowMinutes   Int          @default(5)
+  cooldownMinutes Int          @default(15)
+  channel         String // webhook | slack | email
+  target          String // URL, or comma-separated email addresses
+  lastTriggeredAt DateTime?
+  createdAt       DateTime     @default(now())
+  events          AlertEvent[]
+
+  @@index([projectId])
+}
+
+model AlertEvent {
+  id        String    @id @default(cuid())
+  ruleId    String
+  rule      AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  projectId String
+  message   String
+  count     Int       @default(0)
+  success   Boolean
+  error     String?
+  test      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  @@index([projectId, createdAt(sort: Desc)])
+  @@index([ruleId, createdAt(sort: Desc)])
+}
