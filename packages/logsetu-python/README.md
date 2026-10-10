@@ -1,15 +1,22 @@
-# logsetu-django
+# logsetu (Python)
 
 Ship Django / DRF, **Flask** and **FastAPI** logs and unhandled errors to your self-hosted [LogSetu](https://github.com/itsrajverma/logsetu) server.
 Zero runtime dependencies, non-blocking (background thread + batching), and it never crashes your app if the log server is down.
 
 ```bash
-pip install logsetu-django
+pip install "logsetu[django]"    # Django / DRF
+pip install "logsetu[flask]"     # Flask
+pip install "logsetu[fastapi]"   # FastAPI / Starlette / any ASGI app
+pip install logsetu              # just the client + logging handler (zero dependencies)
 ```
 
-Despite the name, the Django part is optional — the same package (import name `logsetu`) ships integrations for
-[Flask](#flask) and [FastAPI / any ASGI app](#fastapi--starlette--asgi). The core client and `logging` handler work in
-any Python program.
+The extras only pull in the framework itself; the SDK has no runtime dependencies. Integrations:
+[Django](#setup-2-minutes), [Flask](#flask) and [FastAPI / any ASGI app](#fastapi--starlette--asgi).
+
+> **Coming from `logsetu-django`?** The package was renamed to `logsetu` in 0.3.0. The import name (`import logsetu`)
+> and all settings are unchanged. Switch with `pip uninstall -y logsetu-django && pip install "logsetu[django]"` and
+> update your requirements file. Don't keep both installed: they contain the same `logsetu` module. `logsetu-django`
+> is still published with identical code for existing installs.
 
 ## Setup (2 minutes)
 

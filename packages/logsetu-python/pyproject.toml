@@ -3,15 +3,15 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "logsetu-django"
-version = "0.2.0"
+name = "logsetu"
+version = "0.3.0"
 description = "LogSetu SDK for Python — Django, DRF, Flask and FastAPI: ship logging records and request errors to your self-hosted LogSetu server"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Raj Verma" }]
 requires-python = ">=3.9"
-keywords = ["logging", "django", "drf", "flask", "fastapi", "asgi", "error-tracking", "self-hosted", "sentry-alternative", "logsetu"]
+keywords = ["logging", "python", "django", "drf", "flask", "fastapi", "asgi", "error-tracking", "self-hosted", "sentry-alternative", "logsetu"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Framework :: Django",

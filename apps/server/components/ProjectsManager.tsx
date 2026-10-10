@@ -293,7 +293,7 @@ app.use(logsetuErrorHandler()); // reports thrown errors
     },
     django: {
       title: "Django",
-      code: `pip install logsetu-django
+      code: `pip install "logsetu[django]"
 
 # settings.py
 LOGGING = {
@@ -315,7 +315,7 @@ MIDDLEWARE = [..., "logsetu.middleware.LogSetuMiddleware"]`,
     },
     python: {
       title: "Flask / FastAPI",
-      code: `pip install logsetu-django
+      code: `pip install "logsetu[flask]"     # or "logsetu[fastapi]"
 
 # Flask
 from logsetu.flask import LogSetu

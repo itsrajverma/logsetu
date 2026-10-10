@@ -24,14 +24,14 @@ jobs:
       - run: pnpm --filter @logsetu/server build
 
   django:
-    name: logsetu-django (Django, Flask, FastAPI)
+    name: logsetu Python SDK (Django, Flask, FastAPI)
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python: ["3.9", "3.12", "3.13"]
     defaults:
       run:
-        working-directory: packages/logsetu-django
+        working-directory: packages/logsetu-python
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

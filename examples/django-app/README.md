@@ -2,7 +2,7 @@
 
 Throwaway app used to test the SDK end-to-end against a local LogSetu server. Not published.
 
-See the package README for real usage: [logsetu-django](../../packages/logsetu-django/README.md).
+See the package README for real usage: [logsetu (Python)](../../packages/logsetu-python/README.md).
 
 ```bash
 cp .env.example .env.local   # paste an API key from http://localhost:8686/dashboard/projects

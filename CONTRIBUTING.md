@@ -19,7 +19,7 @@ pnpm dev                                       # http://localhost:8686
 Django SDK:
 
 ```bash
-cd packages/logsetu-django
+cd packages/logsetu-python
 python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 pytest
@@ -40,7 +40,7 @@ go test -race ./...
 | `apps/server/prisma/{sqlite,postgres}` | One Prisma schema per provider (same models). Both clients are generated; `lib/db.ts` picks one from `DATABASE_URL`. |
 | `apps/server/prisma/migrations` | Plain SQL migrations applied at container start by `scripts/migrate.mjs` |
 | `packages/logsetu-js` | npm SDK, built with tsup (`src/index.ts`, `src/react.tsx`, `src/next.ts`, `src/express.ts`, `src/hono.ts`) |
-| `packages/logsetu-django` | PyPI SDK (`src/logsetu`: Django in `handler.py` / `middleware.py`, Flask in `flask.py`, FastAPI / ASGI in `asgi.py`) |
+| `packages/logsetu-python` | PyPI SDK `logsetu` (`src/logsetu`: Django in `handler.py` / `middleware.py`, Flask in `flask.py`, FastAPI / ASGI in `asgi.py`) |
 | `packages/logsetu-go` | Go module (`logsetu.go` client, `slog.go`, `http.go`) |
 | `examples/*` | Throwaway apps used for end-to-end testing of the SDKs |
 
@@ -57,7 +57,7 @@ go test -race ./...
 pnpm -r typecheck
 pnpm -r test
 pnpm --filter @logsetu/server build
-(cd packages/logsetu-django && pytest)
+(cd packages/logsetu-python && pytest)
 (cd packages/logsetu-go && go test ./...)
 ```
 
@@ -67,7 +67,10 @@ CI runs the same plus a Docker build. Please keep PRs focused and include a test
 
 - **Server image**: every push to `main` publishes `ghcr.io/itsrajverma/logsetu:latest`; tags `vX.Y.Z` publish versioned images.
 - **logsetu-js**: bump `packages/logsetu-js/package.json`, tag `js-vX.Y.Z` → published to npm by CI (needs `NPM_TOKEN`).
-- **logsetu-django**: bump `packages/logsetu-django/pyproject.toml` (and `__version__` in `client.py`), tag `django-vX.Y.Z` → published to PyPI by CI (needs `PYPI_TOKEN`).
+- **logsetu** (Python): bump `packages/logsetu-python/pyproject.toml` (and `__version__` in `client.py`), tag `python-vX.Y.Z` → published to PyPI by CI (needs `PYPI_TOKEN`).
+- **logsetu-django** (old name, kept so existing installs get updates): tag `django-vX.Y.Z` → CI builds the same source
+  with the distribution name swapped to `logsetu-django`. It can't be a thin alias depending on `logsetu`: both ship the
+  `logsetu/` module, so pip would delete the new files while uninstalling the old version.
 - **logsetu-go**: bump `Version` in `packages/logsetu-go/logsetu.go`, then tag `packages/logsetu-go/vX.Y.Z` — Go modules in a
   subdirectory are versioned by tags with that prefix; the Go module proxy picks it up, no publish step needed.
 
@@ -75,5 +78,5 @@ Manual publish, if you prefer:
 
 ```bash
 pnpm --filter logsetu-js publish --access public
-cd packages/logsetu-django && python -m build && twine upload dist/*
+cd packages/logsetu-python && python -m build && twine upload dist/*
 ```

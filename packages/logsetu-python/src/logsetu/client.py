@@ -18,7 +18,7 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 LogDict = Dict[str, Any]
 
@@ -206,7 +206,7 @@ class LogSetuClient:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
-            "User-Agent": f"logsetu-django/{__version__}",
+            "User-Agent": f"logsetu-python/{__version__}",
         }
         last_error = "unknown error"
         for attempt in range(self.max_retries + 1):

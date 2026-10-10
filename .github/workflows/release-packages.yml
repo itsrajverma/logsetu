@@ -1,12 +1,14 @@
-# Publishes logsetu-js to npm and logsetu-django to PyPI when a matching tag is pushed:
-#   js-v0.1.0      → npm   (trusted publishing / OIDC — configure on npmjs.com: package → Settings →
-#                           Trusted Publisher → GitHub Actions, repo itsrajverma/logsetu, workflow release-packages.yml)
-#   django-v0.1.0  → PyPI  (secret PYPI_TOKEN, or PyPI trusted publishing)
+# Publishes the SDKs when a matching tag is pushed:
+#   js-v0.2.0      → npm "logsetu-js" (trusted publishing / OIDC — configure on npmjs.com: package → Settings →
+#                    Trusted Publisher → GitHub Actions, repo itsrajverma/logsetu, workflow release-packages.yml)
+#   python-v0.3.0  → PyPI "logsetu"        (secret PYPI_TOKEN, or PyPI trusted publishing)
+#   django-v0.3.0  → PyPI "logsetu-django" — the old name, same source with the distribution name swapped
+# The Go module needs no workflow: tag packages/logsetu-go/vX.Y.Z and the Go proxy picks it up.
 name: Release packages
 
 on:
   push:
-    tags: ["js-v*", "django-v*"]
+    tags: ["js-v*", "python-v*", "django-v*"]
 
 jobs:
   npm:
@@ -31,22 +33,25 @@ jobs:
         working-directory: packages/logsetu-js
 
   pypi:
-    if: startsWith(github.ref_name, 'django-v')
+    if: startsWith(github.ref_name, 'python-v') || startsWith(github.ref_name, 'django-v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     defaults:
       run:
-        working-directory: packages/logsetu-django
+        working-directory: packages/logsetu-python
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install build twine
+      - name: Build under the legacy name "logsetu-django"
+        if: startsWith(github.ref_name, 'django-v')
+        run: sed -i 's/^name = "logsetu"$/name = "logsetu-django"/' pyproject.toml && grep -q '^name = "logsetu-django"$' pyproject.toml
       - run: python -m build && python -m twine check dist/*
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: packages/logsetu-django/dist
+          packages-dir: packages/logsetu-python/dist
           password: ${{ secrets.PYPI_TOKEN }}
