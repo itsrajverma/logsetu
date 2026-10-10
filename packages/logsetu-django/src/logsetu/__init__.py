@@ -1,4 +1,4 @@
-"""LogSetu SDK for Django & DRF.
+"""LogSetu SDK for Python: Django & DRF, Flask (``logsetu.flask``) and FastAPI / ASGI (``logsetu.fastapi``).
 
 Quick start (settings.py)::
 

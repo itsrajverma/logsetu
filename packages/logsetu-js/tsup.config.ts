@@ -4,14 +4,14 @@ import fs from "node:fs";
 // Single build for all entries (parallel array configs raced on `clean` and could delete each
 // other's output). rollup/treeshake strips the "use client" directive, so it is re-added afterwards.
 export default defineConfig({
-  entry: { index: "src/index.ts", next: "src/next.ts", react: "src/react.tsx" },
+  entry: { index: "src/index.ts", next: "src/next.ts", react: "src/react.tsx", express: "src/express.ts", hono: "src/hono.ts" },
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,
   treeshake: true,
   clean: true,
   target: "es2020",
-  external: ["react", "next"],
+  external: ["react", "next", "express", "hono"],
   onSuccess: async () => {
     for (const f of ["dist/react.js", "dist/react.cjs"]) {
       const src = fs.readFileSync(f, "utf8");

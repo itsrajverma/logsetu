@@ -1,11 +1,15 @@
 # logsetu-django
 
-Ship Django / DRF logs and unhandled errors to your self-hosted [LogSetu](https://github.com/itsrajverma/logsetu) server.
+Ship Django / DRF, **Flask** and **FastAPI** logs and unhandled errors to your self-hosted [LogSetu](https://github.com/itsrajverma/logsetu) server.
 Zero runtime dependencies, non-blocking (background thread + batching), and it never crashes your app if the log server is down.
 
 ```bash
 pip install logsetu-django
 ```
+
+Despite the name, the Django part is optional — the same package (import name `logsetu`) ships integrations for
+[Flask](#flask) and [FastAPI / any ASGI app](#fastapi--starlette--asgi). The core client and `logging` handler work in
+any Python program.
 
 ## Setup (2 minutes)
 
@@ -117,6 +121,59 @@ attached to all logs emitted during that request and exposed as `request.logsetu
 
 Nothing special — the handler works anywhere Python's `logging` does. Set `extra={"source": "celery"}` to distinguish
 workers, or configure a second handler with a different `source`.
+
+## Flask
+
+```python
+import os
+from flask import Flask
+from logsetu.flask import LogSetu
+
+app = Flask(__name__)
+LogSetu(app, api_key=os.environ["LOGSETU_API_KEY"], endpoint=os.environ["LOGSETU_ENDPOINT"], source="flask-api")
+```
+
+App factory? Create `logsetu = LogSetu()` at module level and call `logsetu.init_app(app)`; options you don't pass are
+read from `app.config` (`LOGSETU_API_KEY`, `LOGSETU_ENDPOINT`, `LOGSETU_ENVIRONMENT`, `LOGSETU_SOURCE`).
+
+The extension reports unhandled exceptions and 5xx responses (route, endpoint, redacted headers, traceback), and attaches
+a `LogSetuHandler` to the root logger so `logging.warning(...)` and above is shipped with the request id, method and
+path of the current request. Flask's own `"Exception on /path"` log line is de-duplicated.
+
+| Option | Default | Description |
+|---|---|---|
+| `api_key` / `endpoint` | `app.config` | Project API key and server URL |
+| `environment` / `source` | `"production"` / `"flask"` | Tags on every log |
+| `get_tenant_id` | — | `callable(request) -> str \| None` or dotted path |
+| `capture_logging` | `True` | Attach a handler to the root logger |
+| `log_level` | `logging.WARNING` | Minimum level forwarded from `logging` |
+| `capture_5xx` | `True` | Report 5xx responses that didn't raise |
+| `log_requests` | `False` | One info/warn log per request |
+| `redact_headers` | auth / cookie / API-key headers | Header names replaced by `[REDACTED]` |
+| `client` | — | Use an existing `LogSetuClient` |
+
+## FastAPI / Starlette / ASGI
+
+```python
+import os
+from fastapi import FastAPI
+from logsetu.fastapi import LogSetuMiddleware   # alias of logsetu.asgi — works with any ASGI app
+
+app = FastAPI()
+app.add_middleware(
+    LogSetuMiddleware,
+    api_key=os.environ["LOGSETU_API_KEY"],
+    endpoint=os.environ["LOGSETU_ENDPOINT"],
+    source="fastapi",
+    ignore_paths=["/healthz"],
+)
+```
+
+A pure ASGI middleware (streaming responses aren't buffered). Same options as Flask plus `ignore_paths`;
+`get_tenant_id` receives the ASGI `scope`, and `api_key` / `endpoint` / `environment` / `source` fall back to the
+`LOGSETU_*` environment variables. Request context reaches logs from both `async def` endpoints and sync endpoints
+running in the threadpool. `HTTPException`s with 4xx status codes aren't reported as errors. The request id is
+available as `request.state.logsetu_request_id`.
 
 ## License
 

@@ -5,8 +5,9 @@
 <h1 align="center">LogSetu</h1>
 
 <p align="center">
-  Free, open-source, self-hosted log management for <b>Next.js / React</b> and <b>Django</b>.<br/>
-  One <code>docker compose up</code>, two 5-minute SDKs, one dashboard for all your apps.
+  Free, open-source, self-hosted log management for <b>Next.js / React</b>, <b>Express / Hono</b>, <b>Django</b>,
+  <b>Flask / FastAPI</b> and <b>Go</b>.<br/>
+  One <code>docker compose up</code>, 5-minute SDKs, one dashboard for all your apps.
 </p>
 
 <p align="center">
@@ -29,7 +30,7 @@ lock-in, or a 12-container Kubernetes deployment.
 
 - **Self-hosted, single container.** SQLite by default; switch to Postgres with one env var.
 - **Free forever.** MIT licensed, no paid tier, no telemetry, no account.
-- **Multi-stack out of the box.** Official SDKs for Next.js/React (`logsetu-js`) and Django/DRF (`logsetu-django`); a plain HTTP API for everything else.
+- **Multi-stack out of the box.** Official SDKs for Next.js/React/Express/Hono (`logsetu-js`), Django/DRF/Flask/FastAPI (`logsetu-django`) and Go (`logsetu-go`); a plain HTTP API for everything else.
 - **Multi-project from day one.** Run all your SaaS products under one dashboard with per-project API keys.
 
 ## 30-second quickstart
@@ -89,6 +90,45 @@ MIDDLEWARE = [..., "logsetu.middleware.LogSetuMiddleware"]  # auto-captures 500s
 
 That's it — logs show up in the dashboard in real time.
 
+<details>
+<summary><b>Express, Hono, Flask, FastAPI and Go</b></summary>
+
+```ts
+// Express — npm install logsetu-js
+import { LogSetu } from "logsetu-js";
+import { logsetuMiddleware, logsetuErrorHandler } from "logsetu-js/express";
+LogSetu.init({ apiKey: process.env.LOGSETU_API_KEY!, endpoint: process.env.LOGSETU_ENDPOINT!, source: "express-api" });
+app.use(logsetuMiddleware());      // req.logsetu, request ids, 5xx capture
+// ...routes...
+app.use(logsetuErrorHandler());    // reports thrown errors with request context
+
+// Hono (Node, Bun, Deno, Cloudflare Workers)
+import { logsetu } from "logsetu-js/hono";
+app.use(logsetu());                // c.get("logsetu"), errors + 5xx, waitUntil flush on the edge
+```
+
+```python
+# Flask — pip install logsetu-django
+from logsetu.flask import LogSetu
+LogSetu(app, api_key=os.environ["LOGSETU_API_KEY"], endpoint=os.environ["LOGSETU_ENDPOINT"], source="flask-api")
+
+# FastAPI / Starlette / any ASGI app
+from logsetu.fastapi import LogSetuMiddleware
+app.add_middleware(LogSetuMiddleware, api_key=os.environ["LOGSETU_API_KEY"], endpoint=os.environ["LOGSETU_ENDPOINT"])
+```
+
+```go
+// Go — go get github.com/itsrajverma/logsetu/packages/logsetu-go
+client := logsetu.New(logsetu.Options{APIKey: os.Getenv("LOGSETU_API_KEY"), Endpoint: os.Getenv("LOGSETU_ENDPOINT"), Source: "go-api"})
+defer client.Close(context.Background())
+slog.SetDefault(slog.New(client.SlogHandler(nil)))     // log/slog → LogSetu
+http.ListenAndServe(":8080", logsetu.Middleware(client, nil)(mux)) // panics, 5xx, request ids
+```
+
+Details: [logsetu-js](packages/logsetu-js/README.md) · [logsetu-django (Django / Flask / FastAPI)](packages/logsetu-django/README.md) · [logsetu-go](packages/logsetu-go/README.md)
+
+</details>
+
 ## Features
 
 - ✅ **Ingestion API** — `POST /api/v1/ingest`, single or batched, Bearer-key auth, validated with zod, per-project rate limiting, responds `202` before writing
@@ -100,8 +140,9 @@ That's it — logs show up in the dashboard in real time.
 - ✅ **OpenTelemetry export** — optionally forward every log to any OTLP/HTTP collector (severity, attributes, trace/span ids mapped) — [docs](docs/opentelemetry.md)
 - ✅ **24h overview** — counts by level and an hourly activity chart per project
 - ✅ **Multi-project** — separate API keys, rotate keys, ready-to-paste integration snippets per project
-- ✅ **`logsetu-js`** — ~2.5 KB gzipped, batching + retry, `captureException`, `<LogSetuErrorBoundary>`, Next.js `instrumentation.ts` hooks, browser + Node + Edge, fully typed
-- ✅ **`logsetu-django`** — a `logging.Handler` (zero deps, background thread), middleware that captures unhandled exceptions with redacted headers, tenant tagging for multi-tenant SaaS
+- ✅ **`logsetu-js`** — ~2.5 KB gzipped, batching + retry, `captureException`, `<LogSetuErrorBoundary>`, Next.js `instrumentation.ts` hooks, Express and Hono middleware, browser + Node + Edge, fully typed
+- ✅ **`logsetu-django`** — a `logging.Handler` (zero deps, background thread), Django middleware, a Flask extension and an ASGI middleware for FastAPI / Starlette that capture unhandled exceptions with redacted headers, tenant tagging for multi-tenant SaaS
+- ✅ **`logsetu-go`** — stdlib-only client with batching + retry, a `log/slog` handler and `net/http` middleware that recovers panics
 - ✅ **Retention policies** — keep logs for N days per project (or a server-wide default); old logs are purged automatically every hour
 - ✅ **SQLite or Postgres** — zero-config SQLite on a Docker volume, or set `DATABASE_URL=postgresql://…`
 - ✅ **Single admin password** — no user-management ceremony for v1
@@ -112,7 +153,9 @@ That's it — logs show up in the dashboard in real time.
 flowchart LR
   subgraph Your apps
     A["Next.js / React app"] -->|"logsetu-js<br/>(batch + retry)"| S
-    B["Django / DRF app"] -->|"logsetu-django<br/>(logging.Handler + middleware)"| S
+    E["Express / Hono app"] -->|"logsetu-js<br/>(middleware)"| S
+    B["Django / Flask / FastAPI app"] -->|"logsetu-django<br/>(logging.Handler + middleware)"| S
+    G["Go service"] -->|"logsetu-go<br/>(slog + net/http)"| S
     C["Anything else"] -->|"HTTP POST /api/v1/ingest"| S
   end
   subgraph "LogSetu (one container)"
@@ -184,8 +227,7 @@ Full reference (ingest, query, projects, stats): [docs/http-api.md](docs/http-ap
 - [x] **SSE real-time streaming** — push instead of polling in the dashboard
 - [x] **Error grouping** — collapse identical stack traces into issues with counts
 - [x] **OpenTelemetry export** — forward logs to any OTLP collector
-- [ ] **Grafana integration** — data source plugin / Loki-compatible query endpoint
-- [ ] **More SDKs** — FastAPI / Flask, Express / Hono, Go
+- [x] **More SDKs** — FastAPI / Flask, Express / Hono, Go
 - [ ] **Multi-user auth** — teams, read-only users, SSO
 
 Have a use case? [Open an issue](https://github.com/itsrajverma/logsetu/issues) — the roadmap is driven by what people actually need.
@@ -195,8 +237,9 @@ Have a use case? [Open an issue](https://github.com/itsrajverma/logsetu/issues) 
 ```
 logsetu/
 ├── apps/server/              # Next.js: ingestion API + dashboard (Prisma, SQLite/Postgres)
-├── packages/logsetu-js/      # npm SDK (Next.js, React, Node)
-├── packages/logsetu-django/  # PyPI SDK (Django, DRF)
+├── packages/logsetu-js/      # npm SDK (Next.js, React, Node, Express, Hono)
+├── packages/logsetu-django/  # PyPI SDK (Django, DRF, Flask, FastAPI / ASGI)
+├── packages/logsetu-go/      # Go module (client, log/slog handler, net/http middleware)
 ├── examples/nextjs-app/      # throwaway app used to test logsetu-js end-to-end
 ├── examples/django-app/      # throwaway app used to test logsetu-django end-to-end
 ├── docs/                     # self-hosting, HTTP API, configuration

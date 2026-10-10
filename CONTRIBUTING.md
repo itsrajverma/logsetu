@@ -5,7 +5,7 @@ issue first so we can agree on the approach.
 
 ## Dev setup
 
-Requirements: Node 20+, pnpm 12 (`corepack enable` or `npm i -g pnpm`), Python 3.9+ (for the Django SDK), Docker (optional).
+Requirements: Node 20+, pnpm 12 (`corepack enable` or `npm i -g pnpm`), Python 3.9+ (for the Python SDK), Go 1.23+ (for the Go SDK), Docker (optional).
 
 ```bash
 git clone https://github.com/itsrajverma/logsetu && cd logsetu
@@ -25,6 +25,13 @@ pip install -e ".[dev]"
 pytest
 ```
 
+Go SDK:
+
+```bash
+cd packages/logsetu-go
+go test -race ./...
+```
+
 ## Repository layout
 
 | Path | What |
@@ -32,8 +39,9 @@ pytest
 | `apps/server` | Next.js app: API routes under `app/api`, dashboard under `app/dashboard`, DB access in `lib/` |
 | `apps/server/prisma/{sqlite,postgres}` | One Prisma schema per provider (same models). Both clients are generated; `lib/db.ts` picks one from `DATABASE_URL`. |
 | `apps/server/prisma/migrations` | Plain SQL migrations applied at container start by `scripts/migrate.mjs` |
-| `packages/logsetu-js` | npm SDK, built with tsup (`src/index.ts`, `src/react.tsx`, `src/next.ts`) |
-| `packages/logsetu-django` | PyPI SDK (`src/logsetu`) |
+| `packages/logsetu-js` | npm SDK, built with tsup (`src/index.ts`, `src/react.tsx`, `src/next.ts`, `src/express.ts`, `src/hono.ts`) |
+| `packages/logsetu-django` | PyPI SDK (`src/logsetu`: Django in `handler.py` / `middleware.py`, Flask in `flask.py`, FastAPI / ASGI in `asgi.py`) |
+| `packages/logsetu-go` | Go module (`logsetu.go` client, `slog.go`, `http.go`) |
 | `examples/*` | Throwaway apps used for end-to-end testing of the SDKs |
 
 ## Changing the database schema
@@ -49,7 +57,8 @@ pytest
 pnpm -r typecheck
 pnpm -r test
 pnpm --filter @logsetu/server build
-cd packages/logsetu-django && pytest
+(cd packages/logsetu-django && pytest)
+(cd packages/logsetu-go && go test ./...)
 ```
 
 CI runs the same plus a Docker build. Please keep PRs focused and include a test for behaviour changes.
@@ -59,6 +68,8 @@ CI runs the same plus a Docker build. Please keep PRs focused and include a test
 - **Server image**: every push to `main` publishes `ghcr.io/itsrajverma/logsetu:latest`; tags `vX.Y.Z` publish versioned images.
 - **logsetu-js**: bump `packages/logsetu-js/package.json`, tag `js-vX.Y.Z` → published to npm by CI (needs `NPM_TOKEN`).
 - **logsetu-django**: bump `packages/logsetu-django/pyproject.toml` (and `__version__` in `client.py`), tag `django-vX.Y.Z` → published to PyPI by CI (needs `PYPI_TOKEN`).
+- **logsetu-go**: bump `Version` in `packages/logsetu-go/logsetu.go`, then tag `packages/logsetu-go/vX.Y.Z` — Go modules in a
+  subdirectory are versioned by tags with that prefix; the Go module proxy picks it up, no publish step needed.
 
 Manual publish, if you prefer:
 

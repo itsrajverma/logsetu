@@ -109,6 +109,9 @@ class LogSetuHandler(logging.Handler):
             req = record.__dict__.get("request")
             if req is not None and getattr(req, "_logsetu_reported", False):
                 return
+            # Same for Flask's "Exception on /path" and uvicorn's "Exception in ASGI application".
+            if record.exc_info and getattr(record.exc_info[1], "_logsetu_reported", False):
+                return
             self.client.enqueue(self.build_entry(record))
         except Exception:
             self.handleError(record)

@@ -1,6 +1,6 @@
 # logsetu-js
 
-Tiny (≈2.5 KB gzipped), zero-dependency SDK that ships logs from **Next.js, React and Node.js** to your
+Tiny (≈2.5 KB gzipped), zero-dependency SDK that ships logs from **Next.js, React, Node.js, Express and Hono** to your
 self-hosted [LogSetu](https://github.com/itsrajverma/logsetu) server. Batches, retries with backoff, never
 blocks your app, and works in both the browser and on the server.
 
@@ -101,6 +101,55 @@ import { LogSetuErrorBoundary } from "logsetu-js/react";
 
 Uncaught render errors are reported with the React component stack and the current URL. Works in plain
 React (Vite / CRA) too — `logsetu-js/react` has no Next.js dependency.
+
+## Express
+
+```ts
+import express from "express";
+import { LogSetu } from "logsetu-js";
+import { logsetuMiddleware, logsetuErrorHandler } from "logsetu-js/express";
+
+LogSetu.init({ apiKey: process.env.LOGSETU_API_KEY!, endpoint: process.env.LOGSETU_ENDPOINT!, source: "express-api" });
+
+const app = express();
+app.use(logsetuMiddleware({ logRequests: true, ignorePaths: ["/healthz"] }));
+
+app.get("/orders/:id", (req, res) => {
+  req.logsetu.info("loading order", { orderId: req.params.id }); // tagged with requestId, method, path
+  // ...
+});
+
+app.use(logsetuErrorHandler()); // after your routes
+```
+
+- `logsetuMiddleware(options)` gives every request a `req.logsetu` child logger (honouring an incoming `X-Request-Id`),
+  reports responses with status `>= 500` and, with `logRequests: true`, logs each request with status and duration.
+- `logsetuErrorHandler()` reports thrown errors (route, IP, user agent, stack) and passes them on with `next(err)`;
+  errors carrying a `status` / `statusCode` below 500 (e.g. `http-errors`) are not reported.
+- Options: `client`, `logRequests`, `capture5xx` (default `true`), `ignorePaths`, and `meta` — an object or
+  `(req) => meta` (e.g. a tenant id). Works with Express 4 and 5; `express` is not a dependency.
+
+## Hono
+
+```ts
+import { Hono } from "hono";
+import { LogSetu, type LogSetuClient } from "logsetu-js";
+import { logsetu } from "logsetu-js/hono";
+
+const app = new Hono<{ Variables: { logsetu: LogSetuClient } }>();
+app.use(logsetu({ client: LogSetu.init({ apiKey: "ls_…", endpoint: "https://logs.example.com", source: "hono-api" }) }));
+
+app.get("/", (c) => {
+  c.get("logsetu").info("hello");
+  return c.text("ok");
+});
+```
+
+The middleware reports thrown errors (`HTTPException`s below 500 are skipped) and 5xx responses, optionally logs every
+request (`logRequests: true`), and exposes a request-scoped logger as `c.get("logsetu")`. On Cloudflare Workers and
+other runtimes with an `executionCtx`, logs are flushed through `waitUntil` after each request so nothing is lost when
+the isolate is frozen; pass `flush: true` to flush (awaited) on runtimes without one. Same `client` / `capture5xx` /
+`ignorePaths` / `meta` options as Express. `hono` is not a dependency.
 
 ## Options
 

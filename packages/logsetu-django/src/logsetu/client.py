@@ -18,7 +18,7 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 LogDict = Dict[str, Any]
 

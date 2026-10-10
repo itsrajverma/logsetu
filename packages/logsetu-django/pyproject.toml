@@ -4,17 +4,19 @@ build-backend = "hatchling.build"
 
 [project]
 name = "logsetu-django"
-version = "0.1.0"
-description = "LogSetu SDK for Django & DRF — ship Python logging records and request errors to your self-hosted LogSetu server"
+version = "0.2.0"
+description = "LogSetu SDK for Python — Django, DRF, Flask and FastAPI: ship logging records and request errors to your self-hosted LogSetu server"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Raj Verma" }]
 requires-python = ">=3.9"
-keywords = ["logging", "django", "drf", "error-tracking", "self-hosted", "sentry-alternative", "logsetu"]
+keywords = ["logging", "django", "drf", "flask", "fastapi", "asgi", "error-tracking", "self-hosted", "sentry-alternative", "logsetu"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Framework :: Django",
+  "Framework :: Flask",
+  "Framework :: FastAPI",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -25,7 +27,9 @@ dependencies = []
 
 [project.optional-dependencies]
 django = ["Django>=3.2"]
-dev = ["Django>=3.2", "pytest>=8", "pytest-django>=4.8", "build", "twine"]
+flask = ["Flask>=2.2"]
+fastapi = ["fastapi>=0.95"]
+dev = ["Django>=3.2", "Flask>=2.2", "fastapi>=0.95", "httpx", "pytest>=8", "pytest-django>=4.8", "build", "twine"]
 
 [project.urls]
 Homepage = "https://github.com/itsrajverma/logsetu"

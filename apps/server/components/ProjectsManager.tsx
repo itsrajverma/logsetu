@@ -258,10 +258,10 @@ function RetentionCard({
 }
 
 function Snippets({ apiKey, origin }: { apiKey: string; origin: string }) {
-  const [tab, setTab] = useState<"js" | "django" | "curl">("js");
+  const [tab, setTab] = useState<"js" | "express" | "django" | "python" | "go" | "curl">("js");
   const snippets: Record<typeof tab, { title: string; code: string }> = {
     js: {
-      title: "Next.js / React (logsetu-js)",
+      title: "Next.js / React",
       code: `npm install logsetu-js
 
 import { LogSetu } from "logsetu-js";
@@ -276,8 +276,23 @@ const logger = LogSetu.init({
 logger.info("User logged in", { userId: 123 });
 logger.error("Payment failed", { orderId: 456 });`,
     },
+    express: {
+      title: "Express / Hono",
+      code: `npm install logsetu-js
+
+import { LogSetu } from "logsetu-js";
+import { logsetuMiddleware, logsetuErrorHandler } from "logsetu-js/express";
+
+LogSetu.init({ apiKey: "${apiKey}", endpoint: "${origin}", source: "express-api" });
+
+app.use(logsetuMiddleware());   // req.logsetu, request ids, 5xx capture
+// ...routes...
+app.use(logsetuErrorHandler()); // reports thrown errors
+
+// Hono: import { logsetu } from "logsetu-js/hono"; app.use(logsetu());`,
+    },
     django: {
-      title: "Django (logsetu-django)",
+      title: "Django",
       code: `pip install logsetu-django
 
 # settings.py
@@ -298,8 +313,34 @@ LOGGING = {
 
 MIDDLEWARE = [..., "logsetu.middleware.LogSetuMiddleware"]`,
     },
+    python: {
+      title: "Flask / FastAPI",
+      code: `pip install logsetu-django
+
+# Flask
+from logsetu.flask import LogSetu
+LogSetu(app, api_key="${apiKey}", endpoint="${origin}", source="flask-api")
+
+# FastAPI / Starlette / any ASGI app
+from logsetu.fastapi import LogSetuMiddleware
+app.add_middleware(LogSetuMiddleware, api_key="${apiKey}", endpoint="${origin}", source="fastapi")`,
+    },
+    go: {
+      title: "Go",
+      code: `go get github.com/itsrajverma/logsetu/packages/logsetu-go
+
+client := logsetu.New(logsetu.Options{
+	APIKey:   "${apiKey}",
+	Endpoint: "${origin}",
+	Source:   "go-api",
+})
+defer client.Close(context.Background())
+
+slog.SetDefault(slog.New(client.SlogHandler(nil)))                   // log/slog → LogSetu
+http.ListenAndServe(":8080", logsetu.Middleware(client, nil)(mux))   // panics, 5xx, request ids`,
+    },
     curl: {
-      title: "HTTP API (any language)",
+      title: "HTTP API",
       code: `curl -X POST ${origin}/api/v1/ingest \\
   -H "Authorization: Bearer ${apiKey}" \\
   -H "Content-Type: application/json" \\
@@ -309,12 +350,12 @@ MIDDLEWARE = [..., "logsetu.middleware.LogSetuMiddleware"]`,
 
   return (
     <div className="bg-surface border border-border rounded-lg">
-      <div className="flex items-center border-b border-border px-2">
+      <div className="flex items-center border-b border-border px-2 overflow-x-auto">
         {(Object.keys(snippets) as (typeof tab)[]).map((k) => (
           <button
             key={k}
             onClick={() => setTab(k)}
-            className={`px-3 py-2 text-sm border-b-2 -mb-px ${
+            className={`px-3 py-2 text-sm border-b-2 -mb-px whitespace-nowrap ${
               tab === k ? "border-accent text-ink" : "border-transparent text-ink-2 hover:text-ink"
             }`}
           >
